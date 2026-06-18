@@ -690,7 +690,7 @@ const youtubeAPIReady = new Promise((resolve) => {
 });
 
 function loadYouTubeAPI() {
-  if (extractYouTubeId(MUSIC_URL) === null) return; // placeholder link not replaced yet — skip silently
+  if (extractYouTubeId(https://www.youtube.com/watch?v=d4OMqGKBl6E&list=RDd4OMqGKBl6E&start_radio=1&ab_channel=ARS) === null) return; // placeholder link not replaced yet — skip silently
   const tag = document.createElement('script');
   tag.src = 'https://www.youtube.com/iframe_api';
   document.head.appendChild(tag);
