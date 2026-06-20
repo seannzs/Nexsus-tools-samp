@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Scanner — Pencarian Semantik AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#0a0b0f;
+    --bg-panel:#14161d;
+    --bg-raised:#1a1d26;
+    --border:#262a35;
+    --border-hover:#3a3f4d;
+    --cyan:#5eead4;
+    --cyan-dim:rgba(94,234,212,.14);
+    --amber:#f5a623;
+    --amber-dim:rgba(245,166,35,.14);
+    --text-1:#e8e9ed;
+    --text-2:#8a8f9c;
+    --text-3:#4b505c;
+    --danger:#f2545b;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg-void);
+    color:var(--text-1);
+    font-family:var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  ::selection{background:var(--cyan-dim);color:var(--cyan);}
+
+  /* ambient background */
+  .bg-orbs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+  .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.16;}
+  .orb-1{width:480px;height:480px;background:var(--cyan);top:-180px;left:-120px;animation:drift1 26s ease-in-out infinite;}
+  .orb-2{width:420px;height:420px;background:var(--amber);bottom:-160px;right:-100px;animation:drift2 32s ease-in-out infinite;}
+  @keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(60px,80px);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-50px,-60px);}}
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(var(--border) 1px,transparent 1px),
+      linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:48px 48px;
+    opacity:.18;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 0%,transparent 70%);
+  }
+
+  .page{
+    position:relative;z-index:1;
+    max-width:780px;margin:0 auto;
+    padding:64px 24px 120px;
+  }
+
+  /* hero */
+  .hero{text-align:center;margin-bottom:40px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:.72rem;letter-spacing:.16em;
+    color:var(--cyan);
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .eyebrow-dot{color:var(--text-3);margin:0 6px;}
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(2.1rem,6vw,3.2rem);
+    line-height:1.08;
+    letter-spacing:-.02em;
+    background:linear-gradient(135deg,var(--text-1) 40%,var(--cyan) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .subhead{
+    margin-top:16px;
+    color:var(--text-2);
+    font-size:1.02rem;
+    max-width:480px;
+    margin-left:auto;margin-right:auto;
+  }
+
+  /* dropzone */
+  .dropzone{
+    border:1.5px dashed var(--border-hover);
+    border-radius:16px;
+    padding:40px 24px;
+    text-align:center;
+    cursor:pointer;
+    background:var(--bg-panel);
+    transition:border-color .25s ease,background .25s ease,transform .15s ease;
+    margin-bottom:28px;
+  }
+  .dropzone:hover{border-color:var(--cyan);background:var(--bg-raised);}
+  .dropzone:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;}
+  .dropzone.drag-active{
+    border-color:var(--cyan);
+    background:var(--cyan-dim);
+    transform:scale(1.01);
+  }
+  .dz-icon{width:34px;height:34px;color:var(--cyan);margin:0 auto 14px;display:block;}
+  .dz-icon path{transition:transform .25s ease;}
+  .dropzone.drag-active .dz-icon path{transform:translateY(-3px);}
+  .dz-title{font-weight:600;font-size:1rem;color:var(--text-1);}
+  .dz-sub{font-size:.85rem;color:var(--text-2);margin-top:6px;}
+
+  /* file list */
+  .file-list-wrap{margin-bottom:28px;animation:riseIn .35s ease both;}
+  .file-list-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;
+  }
+  .mono{font-family:var(--font-mono);font-size:.78rem;color:var(--text-2);}
+  .link-btn{
+    background:none;border:none;color:var(--text-2);
+    font-family:var(--font-mono);font-size:.78rem;cursor:pointer;
+    text-decoration:underline;text-underline-offset:3px;
+    transition:color .2s ease;
+  }
+  .link-btn:hover{color:var(--danger);}
+  .file-list{
+    display:flex;flex-wrap:wrap;gap:8px;
+    position:relative;
+    padding-top:2px;
+  }
+  .file-list.is-scanning::after{
+    content:'';
+    position:absolute;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    box-shadow:0 0 12px 2px var(--cyan);
+    animation:sweep 1.4s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes sweep{0%{top:0%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:100%;opacity:0;}}
+
+  .chip{
+    display:flex;align-items:center;gap:8px;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px 10px;
+    animation:chipIn .3s ease both;
+    transition:border-color .3s ease,opacity .3s ease;
+    max-width:240px;
+  }
+  .file-list.is-scanning .chip{
+    animation:chipIn .3s ease both, pulse 1.4s ease-in-out infinite;
+  }
+  .file-list.is-scanning .chip:nth-child(2n){animation-delay:.15s, .15s;}
+  .file-list.is-scanning .chip:nth-child(3n){animation-delay:.3s, .3s;}
+  .file-list.is-scanning .chip:nth-child(4n){animation-delay:.45s, .45s;}
+  @keyframes pulse{0%,100%{border-color:var(--border);}50%{border-color:var(--cyan);}}
+  @keyframes chipIn{from{opacity:0;transform:scale(.9) translateY(4px);}to{opacity:1;transform:none;}}
+  .chip.unreadable{opacity:.55;}
+  .chip-badge{
+    font-family:var(--font-mono);font-size:.62rem;font-weight:500;
+    padding:3px 6px;border-radius:5px;
+    border:1px solid var(--cyan);color:var(--cyan);
+    white-space:nowrap;flex-shrink:0;
+  }
+  .chip.unreadable .chip-badge{border-color:var(--text-3);color:var(--text-3);}
+  .chip-info{min-width:0;flex:1;}
+  .chip-name{font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .chip-size{font-family:var(--font-mono);font-size:.65rem;color:var(--text-2);}
+  .chip-status{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .spinner{
+    width:11px;height:11px;border-radius:50%;
+    border:2px solid var(--border-hover);border-top-color:var(--cyan);
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .chip-remove{
+    background:none;border:none;color:var(--text-3);cursor:pointer;
+    font-size:1rem;line-height:1;padding:2px;flex-shrink:0;
+    transition:color .2s ease;
+  }
+  .chip-remove:hover{color:var(--danger);}
+
+  /* search bar */
+  .search-bar{display:flex;gap:10px;margin-bottom:10px;}
+  .search-input-wrap{
+    flex:1;display:flex;align-items:center;gap:10px;
+    background:var(--bg-panel);border:1px solid var(--border);
+    border-radius:12px;padding:0 16px;
+    transition:border-color .2s ease,box-shadow .2s ease;
+  }
+  .search-input-wrap:focus-within{border-color:var(--cyan);box-shadow:0 0 0 3px var(--cyan-dim);}
+  .search-icon{width:17px;height:17px;color:var(--text-2);flex-shrink:0;}
+  #searchInput{
+    flex:1;background:none;border:none;outline:none;
+    color:var(--text-1);font-family:var(--font-body);font-size:.95rem;
+    padding:14px 0;
+  }
+  #searchInput::placeholder{color:var(--text-3);}
+  .scan-btn{
+    display:flex;align-items:center;gap:8px;
+    background:var(--cyan);color:#06231d;
+    border:none;border-radius:12px;
+    padding:0 22px;font-family:var(--font-display);font-weight:600;font-size:.92rem;
+    cursor:pointer;transition:transform .15s ease,box-shadow .25s ease,background .2s ease;
+    white-space:nowrap;
+  }
+  .scan-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px -4px var(--cyan-dim);}
+  .scan-btn:active:not(:disabled){transform:translateY(0);}
+  .scan-btn:disabled{background:var(--bg-raised);color:var(--text-2);cursor:default;}
+  .scan-btn-icon{font-size:1rem;}
+  .scan-btn.shake{animation:shake .35s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+  .status-line{
+    font-family:var(--font-mono);font-size:.78rem;color:var(--text-2);
+    margin-bottom:36px;min-height:18px;display:flex;align-items:center;gap:8px;
+  }
+  .status-line.error{color:var(--danger);}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.2s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+  /* results */
+  .results{display:flex;flex-direction:column;gap:12px;}
+  .results-head{
+    font-family:var(--font-mono);font-size:.78rem;color:var(--text-2);
+    margin-bottom:4px;
+  }
+  .result-card{
+    background:var(--bg-panel);border:1px solid var(--border);
+    border-radius:14px;padding:18px 20px;
+    animation:riseIn .4s ease both;
+    transition:border-color .25s ease;
+  }
+  .result-card.top-match{border-color:var(--amber);background:linear-gradient(180deg,var(--amber-dim),transparent 60%);}
+  @keyframes riseIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .result-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;}
+  .result-name{font-family:var(--font-display);font-weight:600;font-size:.98rem;}
+  .result-tag{
+    font-family:var(--font-mono);font-size:.6rem;color:var(--amber);
+    border:1px solid var(--amber);padding:2px 7px;border-radius:5px;
+    margin-left:8px;vertical-align:middle;
+  }
+  .result-score{font-family:var(--font-mono);font-size:.85rem;color:var(--cyan);flex-shrink:0;}
+  .bar-track{height:4px;background:var(--bg-raised);border-radius:2px;overflow:hidden;margin-bottom:12px;}
+  .bar-fill{height:100%;background:var(--cyan);border-radius:2px;width:0;transition:width 1s cubic-bezier(.16,1,.3,1);}
+  .bar-fill.low{background:var(--text-3);}
+  .result-reason{font-size:.88rem;color:var(--text-1);line-height:1.5;margin-bottom:8px;}
+  .result-snippet{
+    font-family:var(--font-mono);font-size:.78rem;color:var(--text-2);
+    background:var(--bg-void);border-left:2px solid var(--border-hover);
+    padding:8px 12px;border-radius:0 6px 6px 0;line-height:1.5;
+  }
+  .empty-state{
+    text-align:center;color:var(--text-3);font-size:.88rem;
+    padding:30px 0;font-family:var(--font-mono);
+  }
+
+  @media (max-width:560px){
+    .page{padding:44px 18px 90px;}
+    .search-bar{flex-direction:column;}
+    .scan-btn{justify-content:center;padding:14px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs" aria-hidden="true">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<main class="page">
+
+  <header class="hero">
+    <p class="eyebrow">FILE SCANNER <span class="eyebrow-dot">·</span> PENCARIAN SEMANTIK AI</p>
+    <h1>Temukan apa pun<br>di filemu.</h1>
+    <p class="subhead">Bukan cuma kata yang cocok — AI ini membaca isi filemu dan memahami maksud pencarianmu.</p>
+  </header>
+
+  <section class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Unggah file untuk dipindai">
+    <input type="file" id="fileInput" multiple hidden>
+    <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="dz-title">Tarik file ke sini, atau klik untuk memilih</p>
+    <p class="dz-sub">Semua jenis file didukung — teks, kode, PDF, Word, CSV, dan lainnya</p>
+  </section>
+
+  <section class="file-list-wrap" id="fileListWrap" hidden>
+    <div class="file-list-head">
+      <span class="mono" id="fileCount"></span>
+      <button class="link-btn" id="clearFiles">Hapus semua</button>
+    </div>
+    <div class="file-list" id="fileList"></div>
+  </section>
+
+  <section class="search-bar">
+    <div class="search-input-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Misal: laporan keuangan kuartal terakhir, atau bug soal login..." autocomplete="off">
+    </div>
+    <button class="scan-btn" id="scanBtn">
+      <span class="scan-btn-icon">⌁</span>
+      <span class="scan-btn-text">Pindai</span>
+    </button>
+  </section>
+  <p class="status-line" id="statusLine" aria-live="polite"></p>
+
+  <section class="results" id="results" aria-live="polite"></section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // ---------- state ----------
+  let files = [];
+  let idCounter = 0;
+  let isScanning = false;
+
+  const TEXT_EXTS = new Set(['txt','md','markdown','csv','tsv','json','js','jsx','ts','tsx','py','java','c','cpp','h','hpp',
+    'html','htm','css','scss','xml','yaml','yml','sh','bash','log','ini','conf','cfg','sql','rb','go','rs','php','swift',
+    'kt','vue','svelte','env','toml','bat','ps1','r','m','pl','lua','dart']);
+  const MAX_CHARS = 6000;
+  const BATCH_SIZE = 6;
+
+  // ---------- dom ----------
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileListWrap = document.getElementById('fileListWrap');
+  const fileList = document.getElementById('fileList');
+  const fileCount = document.getElementById('fileCount');
+  const clearFilesBtn = document.getElementById('clearFiles');
+  const searchInput = document.getElementById('searchInput');
+  const scanBtn = document.getElementById('scanBtn');
+  const statusLine = document.getElementById('statusLine');
+  const resultsEl = document.getElementById('results');
+
+  // ---------- helpers ----------
+  function getExt(name){
+    const parts = name.split('.');
+    return parts.length > 1 ? parts.pop().toLowerCase() : '';
+  }
+  function formatBytes(b){
+    if (b < 1024) return b + ' B';
+    if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    return (b/(1024*1024)).toFixed(1) + ' MB';
+  }
+  function isTextLike(file, ext){
+    if (TEXT_EXTS.has(ext)) return true;
+    if (file.type && file.type.startsWith('text/')) return true;
+    if (file.type === 'application/json') return true;
+    return false;
+  }
+  function setStatus(msg, mode){
+    statusLine.innerHTML = '';
+    statusLine.className = 'status-line' + (mode === 'error' ? ' error' : '');
+    if (mode === 'busy') {
+      const dot = document.createElement('span');
+      dot.className = 'status-dot';
+      statusLine.appendChild(dot);
+    }
+    const span = document.createElement('span');
+    span.textContent = msg;
+    statusLine.appendChild(span);
+  }
+
+  // ---------- file extraction ----------
+  async function extractPdfText(file){
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let text = '';
+    const maxPages = Math.min(pdf.numPages, 15);
+    for (let i = 1; i <= maxPages; i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it => it.str).join(' ') + '\n';
+      if (text.length > MAX_CHARS) break;
+    }
+    return text.slice(0, MAX_CHARS);
+  }
+
+  async function extractDocxText(file){
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    return result.value.slice(0, MAX_CHARS);
+  }
+
+  async function extractPlainText(file){
+    const text = await file.text();
+    return text.slice(0, MAX_CHARS);
+  }
+
+  async function extractContent(entry){
+    const ext = entry.ext;
+    try{
+      if (ext === 'pdf'){
+        entry.content = await extractPdfText(entry.file);
+        entry.readable = entry.content.trim().length > 0;
+      } else if (ext === 'docx'){
+        entry.content = await extractDocxText(entry.file);
+        entry.readable = entry.content.trim().length > 0;
+      } else if (ext === 'doc'){
+        entry.content = '';
+        entry.readable = false;
+      } else if (isTextLike(entry.file, ext)){
+        entry.content = await extractPlainText(entry.file);
+        entry.readable = true;
+      } else {
+        entry.content = '';
+        entry.readable = false;
+      }
+    } catch(e){
+      entry.content = '';
+      entry.readable = false;
+    }
+    entry.status = 'ready';
+    renderChip(entry);
+  }
+
+  // ---------- file list UI ----------
+  function handleFiles(fileArr){
+    if (!fileArr.length) return;
+    fileListWrap.hidden = false;
+    Array.from(fileArr).forEach(file => {
+      const entry = {
+        id: 'f' + (idCounter++),
+        file,
+        name: file.name,
+        size: file.size,
+        ext: getExt(file.name),
+        content: '',
+        readable: false,
+        status: 'reading'
+      };
+      files.push(entry);
+      renderChip(entry);
+      extractContent(entry);
+    });
+    updateFileCount();
+  }
+
+  function updateFileCount(){
+    fileCount.textContent = files.length + (files.length === 1 ? ' file ditambahkan' : ' file ditambahkan');
+  }
+
+  function renderChip(entry){
+    let chip = document.getElementById('chip-' + entry.id);
+    if (!chip){
+      chip = document.createElement('div');
+      chip.id = 'chip-' + entry.id;
+      chip.className = 'chip';
+      fileList.appendChild(chip);
+    }
+    chip.classList.toggle('unreadable', entry.status === 'ready' && !entry.readable);
+
+    chip.innerHTML = '';
+
+    const badge = document.createElement('span');
+    badge.className = 'chip-badge';
+    badge.textContent = entry.ext ? entry.ext.toUpperCase() : '—';
+    chip.appendChild(badge);
+
+    const info = document.createElement('div');
+    info.className = 'chip-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'chip-name';
+    nameEl.textContent = entry.name;
+    nameEl.title = entry.name;
+    const sizeEl = document.createElement('div');
+    sizeEl.className = 'chip-size';
+    sizeEl.textContent = formatBytes(entry.size) + (entry.status === 'ready' && !entry.readable ? ' · tidak terbaca' : '');
+    info.appendChild(nameEl);
+    info.appendChild(sizeEl);
+    chip.appendChild(info);
+
+    const statusEl = document.createElement('div');
+    statusEl.className = 'chip-status';
+    if (entry.status === 'reading'){
+      const sp = document.createElement('div');
+      sp.className = 'spinner';
+      statusEl.appendChild(sp);
+    } else {
+      statusEl.textContent = entry.readable ? '✓' : '–';
+      statusEl.style.color = entry.readable ? 'var(--cyan)' : 'var(--text-3)';
+      statusEl.style.fontSize = '.78rem';
+    }
+    chip.appendChild(statusEl);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'chip-remove';
+    removeBtn.setAttribute('aria-label', 'Hapus ' + entry.name);
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => removeFile(entry.id);
+    chip.appendChild(removeBtn);
+  }
+
+  function removeFile(id){
+    files = files.filter(f => f.id !== id);
+    const chip = document.getElementById('chip-' + id);
+    if (chip) chip.remove();
+    updateFileCount();
+    if (!files.length){
+      fileListWrap.hidden = true;
+      resultsEl.innerHTML = '';
+      setStatus('');
+    }
+  }
+
+  clearFilesBtn.addEventListener('click', () => {
+    files = [];
+    fileList.innerHTML = '';
+    fileListWrap.hidden = true;
+    resultsEl.innerHTML = '';
+    setStatus('');
+  });
+
+  // ---------- drag & drop / input ----------
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); }
+  });
+  fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+  ['dragenter','dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.classList.add('drag-active');
+    });
+  });
+  ['dragleave','drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.classList.remove('drag-active');
+    });
+  });
+  dropzone.addEventListener('drop', e => {
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // ---------- AI semantic search ----------
+  function shakeButton(){
+    scanBtn.classList.remove('shake');
+    void scanBtn.offsetWidth;
+    scanBtn.classList.add('shake');
+  }
+
+  async function callBatch(batch, query){
+    const docs = batch.map(e => ({
+      id: e.id,
+      nama_file: e.name,
+      isi: e.readable ? e.content : '[FILE BINER ATAU TIDAK BISA DIBACA - tidak ada teks]'
+    }));
+
+    const systemPrompt = 'Kamu adalah mesin pencari semantik. Diberi daftar dokumen (JSON) dan sebuah query pencarian. ' +
+      'Untuk SETIAP dokumen, nilai seberapa relevan isinya (atau nama filenya jika isi tidak ada) terhadap query, ' +
+      'berdasarkan makna/konteks, bukan cuma kecocokan kata persis. ' +
+      'Balas HANYA dengan JSON array valid, tanpa teks lain, tanpa markdown code fence. ' +
+      'Setiap elemen objek harus punya struktur persis: ' +
+      '{"id": "...", "relevansi": <integer 0-100>, "alasan": "<1 kalimat singkat bahasa Indonesia, maks 15 kata>", ' +
+      '"cuplikan": "<potongan teks paling relevan dari isi dokumen, maks 100 karakter, atau string kosong jika tidak ada isi>"}. ' +
+      'Berikan skor rendah (di bawah 20) untuk dokumen biner/tanpa isi kecuali nama filenya sangat jelas berkaitan dengan query.';
+
+    const userPrompt = 'Query pencarian: "' + query + '"\n\nDokumen:\n' + JSON.stringify(docs);
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    const data = await response.json();
+    const textBlock = (data.content || []).map(b => b.text || '').join('');
+    const clean = textBlock.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  }
+
+  function chunk(arr, size){
+    const out = [];
+    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+    return out;
+  }
+
+  async function runScan(){
+    if (isScanning) return;
+    const query = searchInput.value.trim();
+    if (!files.length){
+      shakeButton();
+      setStatus('Tambahkan setidaknya satu file dulu.', 'error');
+      return;
+    }
+    if (!query){
+      shakeButton();
+      setStatus('Tulis dulu apa yang kamu cari.', 'error');
+      return;
+    }
+
+    isScanning = true;
+    scanBtn.disabled = true;
+    scanBtn.querySelector('.scan-btn-text').textContent = 'Memindai...';
+    fileList.classList.add('is-scanning');
+    resultsEl.innerHTML = '';
+
+    const stillReading = files.filter(f => f.status === 'reading').length;
+    if (stillReading) {
+      await new Promise(res => {
+        const check = setInterval(() => {
+          if (!files.some(f => f.status === 'reading')){ clearInterval(check); res(); }
+        }, 150);
+      });
+    }
+
+    const batches = chunk(files, BATCH_SIZE);
+    let allResults = [];
+    let hadError = false;
+
+    for (let i = 0; i < batches.length; i++){
+      setStatus('Memindai batch ' + (i+1) + ' dari ' + batches.length + ' dengan AI semantik...', 'busy');
+      try{
+        const res = await callBatch(batches[i], query);
+        if (Array.isArray(res)) allResults = allResults.concat(res);
+      } catch(e){
+        hadError = true;
+      }
+    }
+
+    fileList.classList.remove('is-scanning');
+    isScanning = false;
+    scanBtn.disabled = false;
+    scanBtn.querySelector('.scan-btn-text').textContent = 'Pindai';
+
+    if (!allResults.length){
+      setStatus(hadError ? 'Pemindaian gagal — coba lagi.' : 'Tidak ada hasil.', hadError ? 'error' : '');
+      resultsEl.innerHTML = '<p class="empty-state">Tidak ada hasil yang ditemukan untuk query ini.</p>';
+      return;
+    }
+
+    allResults.sort((a,b) => (b.relevansi||0) - (a.relevansi||0));
+    setStatus((hadError ? 'Sebagian batch gagal · ' : '') + allResults.length + ' file dipindai · selesai.', hadError ? 'error' : '');
+    renderResults(allResults);
+  }
+
+  function renderResults(results){
+    resultsEl.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'results-head';
+    const strong = results.filter(r => (r.relevansi||0) >= 70).length;
+    head.textContent = results.length + ' file dipindai · ' + strong + ' sangat relevan';
+    resultsEl.appendChild(head);
+
+    results.forEach((r, idx) => {
+      const entry = files.find(f => f.id === r.id);
+      if (!entry) return;
+      const score = Math.max(0, Math.min(100, r.relevansi || 0));
+
+      const card = document.createElement('div');
+      card.className = 'result-card' + (idx === 0 && score >= 50 ? ' top-match' : '');
+      card.style.animationDelay = (idx * 0.05) + 's';
+
+      const top = document.createElement('div');
+      top.className = 'result-top';
+      const nameWrap = document.createElement('div');
+      nameWrap.innerHTML = '<span class="result-name">' + escapeHtml(entry.name) + '</span>' +
+        (idx === 0 && score >= 50 ? '<span class="result-tag">paling relevan</span>' : '');
+      const scoreEl = document.createElement('div');
+      scoreEl.className = 'result-score';
+      scoreEl.textContent = score + '%';
+      top.appendChild(nameWrap);
+      top.appendChild(scoreEl);
+      card.appendChild(top);
+
+      const track = document.createElement('div');
+      track.className = 'bar-track';
+      const fill = document.createElement('div');
+      fill.className = 'bar-fill' + (score < 40 ? ' low' : '');
+      track.appendChild(fill);
+      card.appendChild(track);
+
+      const reason = document.createElement('p');
+      reason.className = 'result-reason';
+      reason.textContent = r.alasan || '';
+      card.appendChild(reason);
+
+      if (r.cuplikan){
+        const snippet = document.createElement('div');
+        snippet.className = 'result-snippet';
+        snippet.textContent = '"' + r.cuplikan + '"';
+        card.appendChild(snippet);
+      }
+
+      resultsEl.appendChild(card);
+      requestAnimationFrame(() => { fill.style.width = score + '%'; });
+    });
+  }
+
+  function escapeHtml(s){
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  scanBtn.addEventListener('click', runScan);
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runScan(); });
+
+})();
+</script>
+</body>
+</html>
