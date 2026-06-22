@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <title>Camera Puzzle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Live camera feed -->
+  <video id="video" autoplay playsinline muted></video>
+
+  <!-- Hidden canvas for photo capture -->
+  <canvas id="cap-canvas"></canvas>
+
+  <!-- ===== MAIN OVERLAY ===== -->
+  <div id="overlay">
+
+    <!-- Scanner frame with corner brackets -->
+    <div id="scan-frame">
+      <span class="c tl"></span>
+      <span class="c tr"></span>
+      <span class="c bl"></span>
+      <span class="c br"></span>
+      <div id="scan-line"></div>
+      <div id="timer-bar"></div>
+      <div id="hand-label">Tangan Terdeteksi</div>
+    </div>
+
+    <!-- Pulsing rings when hand detected -->
+    <div id="hand-rings">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+    </div>
+
+    <!-- Big countdown number -->
+    <div id="countdown"></div>
+
+    <!-- Bottom status pill -->
+    <div id="status">Memuat Kamera...</div>
+
+  </div>
+
+  <!-- Camera flash -->
+  <div id="flash"></div>
+
+  <!-- Puzzle tiles container -->
+  <div id="puzzle"></div>
+
+  <!-- Puzzle solved overlay -->
+  <div id="done-overlay">
+    <div id="done-card">
+      <div id="done-icon">✓</div>
+      <h2>Puzzle Selesai!</h2>
+      <p>Luar biasa! Kamu berhasil<br>menyusun semua kepingan.</p>
+      <button id="restart-btn">Mulai Lagi</button>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
