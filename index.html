@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus SAMP Suite</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- GSAP Smooth Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #070b19;
+            --container-bg: #0f162e;
+            --sea-blue: #00fff0;
+            --neon-purple: #8a2be2;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --input-bg: #060914;
+            --border-color: rgba(0, 255, 240, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #070b1a 0%, #0d1530 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            max-width: 700px;
+            margin-bottom: 20px;
+            background: rgba(15, 22, 46, 0.9);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--sea-blue), var(--neon-purple));
+            color: #070b19;
+            box-shadow: 0 4px 12px rgba(0, 255, 240, 0.2);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--container-bg);
+            padding: 20px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            display: none;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+
+        .container.active { display: block; }
+        .header-zone { text-align: center; margin-bottom: 20px; }
+        h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; background: linear-gradient(135deg, #ffffff 40%, var(--sea-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 1px; }
+        p.subtitle { color: var(--text-muted); font-size: 13px; }
+
+        .menu-grid { display: flex; flex-direction: column; gap: 12px; }
+        .menu-card { background: var(--input-bg); border: 1px solid rgba(255, 255, 255, 0.05); padding: 18px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.2s; }
+        .menu-card:hover { border-color: var(--sea-blue); box-shadow: 0 0 15px rgba(0, 255, 240, 0.1); transform: translateY(-2px); }
+        .menu-card .icon { font-size: 28px; background: rgba(0, 255, 240, 0.1); padding: 10px; border-radius: 10px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+        .menu-card h3 { margin-bottom: 4px; font-size: 16px; color: #fff; }
+        .menu-card p { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .full-width { grid-column: span 2; }
+        label { font-size: 11px; font-weight: 700; color: var(--sea-blue); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        input[type="text"], input[type="date"], select, input[type="number"] {
+            width: 100%; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; background: var(--input-bg); color: #fff; font-size: 14px;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--sea-blue); box-shadow: 0 0 10px rgba(0, 255, 240, 0.15); }
+
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-generate { background: linear-gradient(135deg, var(--sea-blue), var(--neon-purple)); color: #070b19; box-shadow: 0 4px 15px rgba(0, 255, 240, 0.15); }
+        .btn-generate:hover:not(:disabled) { filter: brightness(1.1); }
+        button:disabled { background: #1e293b !important; cursor: not-allowed; color: var(--text-muted) !important; box-shadow: none; }
+
+        /* Loader & Output CS */
+        .loading-wrapper {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 188, 0, 0.02);
+            border-radius: 12px;
+            border: 1px dashed rgba(255, 188, 0, 0.15);
+        }
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0, 255, 240, 0.1);
+            border-top: 3px solid var(--sea-blue);
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: #ffbc00; font-weight: 600; font-size: 13px; }
+
+        .output-container { margin-top: 20px; display: none; opacity: 0; }
+        .preview-box {
+            background: #04060d; border: 1px solid rgba(255,255,255,0.03); border-left: 3px solid var(--sea-blue);
+            padding: 15px; white-space: pre-wrap; border-radius: 10px; font-family: 'Courier New', Courier, monospace;
+            font-size: 13px; line-height: 1.6; color: #e2e8f0; max-height: 350px; overflow-y: auto; text-align: left;
+        }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-copy { background: rgba(46, 204, 113, 0.1); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.2); }
+        .btn-copy:hover { background: #2ecc71; color: #fff; }
+
+        /* Canvas Sizes (Large Preview) */
+        .canvas-container { 
+            width: 100%; display: flex; justify-content: center; margin-bottom: 20px; background: #04060d; 
+            padding: 6px; border-radius: 14px; border: 2px solid rgba(0, 255, 240, 0.25); box-shadow: 0 8px 24px rgba(0,0,0,0.6); overflow: hidden; 
+        }
+        canvas { width: 100%; height: auto; border-radius: 10px; background: #111422; display: block; }
+        
+        /* D-Pad Controller Styles */
+        .controller-box { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 15px 0; background: rgba(6, 9, 20, 0.5); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        .dpad-row { display: flex; gap: 10px; }
+        .btn-ctrl { background: #161f3d; border: 1px solid var(--border-color); color: #fff; width: 55px; height: 48px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+        .btn-ctrl:active { background: var(--sea-blue); color: #000; }
+
+        .color-pickers { display: flex; gap: 10px; margin-bottom: 5px; }
+        .color-dot { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.1s; }
+        .color-dot.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        .toast-container { position: fixed; top: 15px; right: 15px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; width: calc(100% - 30px); max-width: 300px; }
+        .toast { padding: 12px 16px; border-radius: 10px; color: #fff; font-weight: 600; font-size: 13px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; transform: translateX(120%); will-change: transform; }
+        .toast.success { background: #2ecc71; }
+        .toast.error { background: #e74c3c; }
+
+        @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; gap: 12px; } }
+    </style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Navigasi Utama -->
+<div class="nav-tabs">
+    <button class="tab-btn active" id="btn-home" onclick="switchTab('home')">🏠 Home</button>
+    <button class="tab-btn" id="btn-cs-gen" onclick="switchTab('cs-gen')">📝 CS Gen</button>
+    <button class="tab-btn" id="btn-ssrp-gen" onclick="switchTab('ssrp-gen')">📸 SSRP Maker</button>
+</div>
+
+<!-- ================= TAB: HOME ================= -->
+<div class="container active" id="tab-home" style="opacity: 1;">
+    <div class="header-zone">
+        <h2>Nexus JGRP Suite</h2>
+        <p class="subtitle">Aplikasi pembantu pengerjaan berkas forum JGRP tercepat</p>
+    </div>
+    <div class="menu-grid">
+        <div class="menu-card" onclick="switchTab('cs-gen')">
+            <div class="icon">📝</div>
+            <div>
+                <h3>Character Story Generator</h3>
+                <p>Ketik data diri dan buat narasi cerita otomatis anti-JSON eror.</p>
+            </div>
+        </div>
+        <div class="menu-card" onclick="switchTab('ssrp-gen')">
+            <div class="icon">📸</div>
+            <div>
+                <h3>SSRP Image Maker</h3>
+                <p>Upload screenshot polosan lalu tambahkan text berkode warna SAMP.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TAB: CHARACTER STORY (SEKARANG SUDAH AKTIF) ================= -->
+<div class="container" id="tab-cs-gen">
+    <div class="header-zone">
+        <h2>Character Story Generator</h2>
+        <p class="subtitle">Buat alur cerita forum JGRP / SAMP instan otomatis</p>
+    </div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="charName">Nama Karakter</label>
+            <input type="text" id="charName" placeholder="Contoh: Alex_Claudius">
+        </div>
+        <div class="form-group">
+            <label for="birthPlace">Tempat Lahir</label>
+            <input type="text" id="birthPlace" placeholder="Contoh: Brooklyn, USA">
+        </div>
+        <div class="form-group">
+            <label for="birthDate">Tanggal Lahir</label>
+            <input type="date" id="birthDate">
+        </div>
+        <div class="form-group">
+            <label for="promptTambahan">Detail Tambahan (Opsional)</label>
+            <input type="text" id="promptTambahan" placeholder="Contoh: Kerja mekanik, anak rajin">
+        </div>
+    </div>
+    <button class="btn btn-generate" id="btnGenCS" onclick="generateStoryWithAnim()">
+        <span>Generate Story ✨</span>
+    </button>
+
+    <div class="loading-wrapper" id="loadingAreaCS">
+        <div class="spinner"></div>
+        <div class="loading-text">MEMPROSES NARASI CERITA VIA AI ENGINE...</div>
+    </div>
+
+    <div class="output-container" id="outputContainerCS">
+        <label style="font-size: 11px; font-weight: 700; color: var(--sea-blue); display:block; margin-bottom:6px;">HASIL SIAP PASTE DI FORUM:</label>
+        <div class="preview-box" id="outputCS"></div>
+        <div class="btn-group">
+            <button class="btn btn-copy" onclick="copyText('outputCS')">📋 Copy Cerita</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TAB: SSRP IMAGE MAKER ================= -->
+<div class="container" id="tab-ssrp-gen">
+    <div class="header-zone">
+        <h2>SSRP Image Maker</h2>
+        <p class="subtitle">Pratinjau layar penuh (Full Screen) — Lebih mudah diedit di HP</p>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="ssrpCanvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group full-width" style="margin-bottom: 5px;">
+            <label>Pilih Gambar Mentahan In-game (.JPG / .PNG)</label>
+            <input type="file" id="ssrpFile" accept="image/*" onchange="loadSsrpImage(event)" style="color:#fff; background: var(--input-bg); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.05)">
+        </div>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group full-width">
+            <label>Isi Teks Dialog / Teks Aksi</label>
+            <input type="text" id="ssrpText" placeholder="Contoh: * Alex Claudius mematikan mesin kendaraan lalu keluar kabin." oninput="drawSsrp()">
+        </div>
+        <div class="form-group">
+            <label>Warna Objek Teks</label>
+            <div class="color-pickers">
+                <div class="color-dot active" style="background: #ffffff;" onclick="setSsrpColor('#ffffff', this)"></div>
+                <div class="color-dot" style="background: #c2a2da;" onclick="setSsrpColor('#c2a2da', this)"></div>
+                <div class="color-dot" style="background: #30a330;" onclick="setSsrpColor('#30a330', this)"></div>
+                <div class="color-dot" style="background: #ffff00;" onclick="setSsrpColor('#ffff00', this)"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Ukuran Huruf (px)</label>
+            <input type="number" id="ssrpFontSize" value="26" min="14" max="60" oninput="drawSsrp()">
+        </div>
+    </div>
+
+    <div class="controller-box">
+        <label>Tombol Navigasi Posisi Teks</label>
+        <div class="dpad-row">
+            <button class="btn-ctrl" onclick="moveText('up')">▲</button>
+        </div>
+        <div class="dpad-row">
+            <button class="btn-ctrl" onclick="moveText('left')">◀</button>
+            <button class="btn-ctrl" style="background:transparent; border:none; cursor:default;"></button>
+            <button class="btn-ctrl" onclick="moveText('right')">▶</button>
+        </div>
+        <div class="dpad-row">
+            <button class="btn-ctrl" onclick="moveText('down')">▼</button>
+        </div>
+    </div>
+
+    <button class="btn btn-generate" onclick="downloadSsrpImg()">
+        <span>💾 DOWNLOAD HASIL SSRP (.PNG)</span>
+    </button>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${tabId}`).classList.add('active');
+
+        const activeContainer = document.querySelector('.container.active');
+        if (activeContainer) {
+            gsap.to(activeContainer, { opacity: 0, y: 10, duration: 0.15, onComplete: () => {
+                activeContainer.classList.remove('active');
+                activeContainer.style.display = 'none';
+                showTargetTab(tabId);
+            }});
+        } else {
+            showTargetTab(tabId);
+        }
+    }
+
+    function showTargetTab(tabId) {
+        const nextContainer = document.getElementById(`tab-${tabId}`);
+        nextContainer.style.display = 'block';
+        nextContainer.classList.add('active');
+        gsap.fromTo(nextContainer, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.25, ease: "power2.out" });
+        if(tabId === 'ssrp-gen') drawSsrp();
+    }
+
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div>${type === 'success' ? '⚡' : '⚠️'}</div> <div>${message}</div>`;
+        container.appendChild(toast);
+        gsap.to(toast, { translateX: '0%', duration: 0.3, ease: "power2.out" });
+        setTimeout(() => { gsap.to(toast, { opacity: 0, x: 20, duration: 0.2, onComplete: () => toast.remove() }); }, 3500);
+    }
+
+    // ================= REAL AI CHARACTER STORY ENGINE =================
+    async function generateStoryWithAnim() {
+        const fullName = document.getElementById('charName').value.trim();
+        const place = document.getElementById('birthPlace').value.trim();
+        const dateInput = document.getElementById('birthDate').value;
+        const infoTambahan = document.getElementById('promptTambahan').value.trim();
+
+        if(!fullName || !place || !dateInput) {
+            showNotification("Mohon isi semua data wajib!", "error");
+            return;
+        }
+
+        const dateObj = new Date(dateInput);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        const formatCSDate = `${day}/${month}/${year}`;
+
+        const btn = document.getElementById('btnGenCS');
+        const loadingArea = document.getElementById('loadingAreaCS');
+        const outputContainer = document.getElementById('outputContainerCS');
+
+        // State Loading Aktif
+        btn.disabled = true;
+        loadingArea.style.display = 'block';
+        gsap.fromTo(loadingArea, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+        outputContainer.style.display = 'none';
+
+        const promptAI = `Kamu adalah AI pembuat Character Story profesional untuk forum GTA SAMP JGRP. Buatlah cerita panjang sebanyak 3 paragraf (minimal 350 kata total), ketik dengan rapi, dan berikan awalan 5 spasi/indentasi di setiap awal paragraf. Karakter ini bernama ${fullName.replace('_', ' ')} yang lahir di ${place} pada tanggal ${day}/${month}/${year}. Detail latar belakang tambahan: ${infoTambahan || 'tidak ada'}. Dilarang merespon dalam bentuk struktur objek JSON, keluarkan langsung teks ceritanya saja secara polos tanpa markdown tebal.`;
+
+        try {
+            const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptAI)}?model=openai&system=${encodeURIComponent("Keluarkan respon dalam bentuk teks cerita langsung murni bahasa indonesia, dilarang membungkus dengan JSON.")}`);
+            if (!response.ok) throw new Error("Koneksi API Gagal.");
+            
+            let rawData = await response.text();
+            let cleanedStory = rawData.replace(/^["'`]|["'`]$/g, '').trim();
+
+            const finalOutput = `Character: ${fullName}\nOrigin: ${place}\nStory Character Born: ${formatCSDate}\n\n${cleanedStory}`;
+
+            document.getElementById('outputCS').innerText = finalOutput;
+            
+            loadingArea.style.display = 'none';
+            outputContainer.style.display = 'block';
+            gsap.fromTo(outputContainer, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 });
+            showNotification("Character Story sukses dibuat!", "success");
+        } catch (error) {
+            showNotification("Error: " + error.message, "error");
+            loadingArea.style.display = 'none';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ================= SSRP CANVAS ENGINE =================
+    const canvas = document.getElementById('ssrpCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let loadedImg = null;
+    let textX = 40;
+    let textY = 60;
+    let selectedColor = '#ffffff';
+
+    function loadSsrpImage(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                loadedImg = img;
+                canvas.width = img.width;
+                canvas.height = img.height;
+                textX = Math.round(img.width * 0.03);
+                textY = Math.round(img.height * 0.06);
+                drawSsrp();
+                showNotification("Gambar berhasil dimuat!", "success");
+            }
+            img.src = event.target.result;
+        }
+        if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function setSsrpColor(color, element) {
+        selectedColor = color;
+        document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+        element.classList.add('active');
+        drawSsrp();
+    }
+
+    function moveText(direction) {
+        const speed = 12; 
+        if(direction === 'up') textY -= speed;
+        if(direction === 'down') textY += speed;
+        if(direction === 'left') textX -= speed;
+        if(direction === 'right') textX += speed;
+        drawSsrp();
+    }
+
+    function drawSsrp() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (loadedImg) {
+            ctx.drawImage(loadedImg, 0, 0, canvas.width, canvas.height);
+        } else {
+            ctx.fillStyle = "#0c101f";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(0, 255, 240, 0.4)";
+            ctx.font = "bold 24px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Silakan Lampirkan Screenshot Polosan Terlebih Dahulu", canvas.width / 2, canvas.height / 2);
+            return;
+        }
+
+        const textValue = document.getElementById('ssrpText').value || "";
+        const size = document.getElementById('ssrpFontSize').value || 26;
+        
+        ctx.font = `bold ${size}px Arial, Tahoma`;
+        ctx.textAlign = "left";
+
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#000000";
+        ctx.strokeText(textValue, textX, textY);
+
+        ctx.fillStyle = selectedColor;
+        ctx.fillText(textValue, textX, textY);
+    }
+
+    function downloadSsrpImg() {
+        if(!loadedImg) {
+            showNotification("Unggah gambar terlebih dahulu!", "error");
+            return;
+        }
+        const link = document.createElement('a');
+        link.download = 'nexus_ssrp_export.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        showNotification("Gambar SSRP siap pakai tersimpan!", "success");
+    }
+
+    function copyText(elementId) {
+        const el = document.getElementById(elementId);
+        navigator.clipboard.writeText(el.innerText).then(() => {
+            showNotification("Berhasil disalin!", "success");
+        }).catch(() => {
+            showNotification("Gagal menyalin teks.", "error");
+        });
+    }
+</script>
+</body>
+</html>
