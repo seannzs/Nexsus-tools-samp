@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Dev tools - SAMP Suite</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- GSAP Smooth Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #070b19;
+            --container-bg: #0f162e;
+            --sea-blue: #00fff0;
+            --neon-purple: #8a2be2;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --input-bg: #060914;
+            --border-color: rgba(0, 255, 240, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #070b1a 0%, #0d1530 100%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 15px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Navigasi / Tab Menu */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 760px;
+            margin-bottom: 20px;
+            background: rgba(15, 22, 46, 0.8);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--sea-blue), var(--neon-purple));
+            color: #070b19;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            background: var(--container-bg);
+            padding: 30px 25px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            display: none; /* Dikontrol via JavaScript */
+            opacity: 0;
+            transform: translateY(15px);
+            will-change: transform, opacity;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        .header-zone {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            background: linear-gradient(135deg, #ffffff 40%, var(--sea-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Grid Pilihan di Menu Home */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .menu-card {
+            background: var(--input-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 25px 20px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .menu-card:hover {
+            border-color: var(--sea-blue);
+            box-shadow: 0 0 15px rgba(0, 255, 240, 0.15);
+        }
+
+        .menu-card .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .menu-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .menu-card p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Form Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--sea-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            background: var(--input-bg);
+            color: #fff;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: monospace;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--sea-blue);
+            box-shadow: 0 0 10px rgba(0, 255, 240, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.1s ease, filter 0.2s ease;
+        }
+
+        .btn-generate { 
+            background: linear-gradient(135deg, var(--sea-blue), var(--neon-purple)); 
+            color: #070b19;
+            box-shadow: 0 4px 15px rgba(0, 255, 240, 0.15);
+        }
+        
+        .btn-generate:hover:not(:disabled) { filter: brightness(1.1); }
+        .btn-generate:active:not(:disabled) { transform: scale(0.98); }
+        button:disabled { background: #1e293b !important; cursor: not-allowed; color: var(--text-muted) !important; box-shadow: none !important; }
+
+        /* Loader & Output */
+        .loading-wrapper {
+            display: none;
+            text-align: center;
+            margin: 25px 0;
+            padding: 15px;
+            background: rgba(255, 188, 0, 0.02);
+            border-radius: 12px;
+            border: 1px dashed rgba(255, 188, 0, 0.15);
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(0, 255, 240, 0.1);
+            border-top: 3px solid var(--sea-blue);
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: #ffbc00; font-weight: 600; font-size: 14px; }
+
+        .output-container {
+            margin-top: 30px;
+            display: none;
+            opacity: 0;
+            transform: translateY(15px);
+            will-change: transform, opacity;
+        }
+
+        .preview-box {
+            background: #04060d;
+            border: 1px solid rgba(255,255,255,0.03);
+            border-left: 3px solid var(--sea-blue);
+            padding: 20px;
+            white-space: pre-wrap;
+            border-radius: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e2e8f0;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        /* Preview Khusus SSRP Rangkap Warna Chat */
+        .ssrp-line { font-family: monospace; font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+        .ssrp-me { color: #c2a2da; } /* * Me Action */
+        .ssrp-do { color: #30a330; } /* * Do Action */
+        .ssrp-talk { color: #ffffff; } /* Talk Normal */
+        .ssrp-shout { color: #ffff00; } /* Shout */
+
+        .btn-group { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-copy { background: rgba(46, 204, 113, 0.1); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.2); }
+        .btn-copy:hover { background: #2ecc71; color: #fff; }
+
+        /* Toast Notifications */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 280px; padding: 14px 20px; border-radius: 10px; color: #fff; font-weight: 600; font-size: 13px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; transform: translateX(120%); will-change: transform; }
+        .toast.success { background: #2ecc71; }
+        .toast.error { background: #e74c3c; }
+        .toast.info { background: #1f293d; border: 1px solid var(--sea-blue); }
+
+        @media (max-width: 600px) {
+            .menu-grid { grid-template-columns: 1fr; gap: 12px; }
+            .form-grid { grid-template-columns: 1fr; gap: 12px; }
+            .full-width { grid-column: span 1; }
+            .btn-group { flex-direction: column; gap: 8px; }
+            .toast-container { right: 10px; left: 10px; top: 10px; }
+            .toast { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Tab Navigation Bar -->
+<div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('home')">🏠 Home</button>
+    <button class="tab-btn" onclick="switchTab('cs-gen')">📝 Character Story</button>
+    <button class="tab-btn" onclick="switchTab('ssrp-gen')">📸 SSRP Gen</button>
+</div>
+
+<!-- ================= DASHBOARD HOME ================= -->
+<div class="container active" id="tab-home">
+    <div class="header-zone">
+        <h2>Nexus SAMP Suite</h2>
+        <p class="subtitle">Pilih tools developer untuk menghemat waktu pengerjaan forum</p>
+    </div>
+    <div class="menu-grid">
+        <div class="menu-card" onclick="switchTab('cs-gen')">
+            <div class="icon">📝</div>
+            <h3>Character Story</h3>
+            <p>Generate narasi alur cerita otomatis dalam bentuk format forum JGRP.</p>
+        </div>
+        <div class="menu-card" onclick="switchTab('ssrp-gen')">
+            <div class="icon">📸</div>
+            <h3>SSRP Generator</h3>
+            <p>Ubah dialog ketikan teks biasa menjadi format kode warna chat server SAMP logis.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= FEATURE: CHARACTER STORY ================= -->
+<div class="container" id="tab-cs-gen">
+    <div class="header-zone">
+        <h2>Character Story Generator</h2>
+        <p class="subtitle">Buat alur cerita forum JGRP / SAMP instan & ringan</p>
+    </div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="charName">Nama Karakter</label>
+            <input type="text" id="charName" placeholder="Contoh: Carl_Johnson">
+        </div>
+        <div class="form-group">
+            <label for="birthPlace">Tempat Lahir</label>
+            <input type="text" id="birthPlace" placeholder="Contoh: Brooklyn, USA">
+        </div>
+        <div class="form-group">
+            <label for="birthDate">Tanggal Lahir</label>
+            <input type="date" id="birthDate">
+        </div>
+        <div class="form-group">
+            <label for="promptTambahan">Detail Tambahan (Opsional)</label>
+            <input type="text" id="promptTambahan" placeholder="Contoh: Mekanik montir, miskin">
+        </div>
+    </div>
+    <button class="btn btn-generate" id="btnGenCS" onclick="generateStoryWithAnim()">
+        <span>Generate Character Story ✨</span>
+    </button>
+    
+    <div class="loading-wrapper" id="loadingAreaCS">
+        <div class="spinner"></div>
+        <div class="loading-text">MENGHUBUNGKAN KE AI ENGINE...</div>
+    </div>
+
+    <div class="output-container" id="outputContainerCS">
+        <label style="font-size: 12px; font-weight: 700; color: var(--sea-blue); display:block; margin-bottom:8px;">FORMAT FORUM JGRP:</label>
+        <div class="preview-box" id="outputCS"></div>
+        <div class="btn-group">
+            <button class="btn btn-copy" onclick="copyText('outputCS')">📋 Copy Text</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= FEATURE: SSRP GENERATOR ================= -->
+<div class="container" id="tab-ssrp-gen">
+    <div class="header-zone">
+        <h2>SSRP Chat Formatter</h2>
+        <p class="subtitle">Format log chat roleplay mentah menjadi teks berkode warna rapi</p>
+    </div>
+    <div class="form-grid">
+        <div class="form-group full-width">
+            <label for="ssrpInput">Masukkan Dialog Mentah</label>
+            <textarea id="ssrpInput" placeholder="Contoh masukan per baris:&#10;Alex Claudius berkata: Halo bos ada kerjaan mekanik?&#10;* Alex Claudius mencoba mengambil kunci inggris di laci.&#10;* Apakah kunci inggris ada di laci? ((Alex Claudius))"></textarea>
+        </div>
+    </div>
+    <button class="btn btn-generate" onclick="generateSSRP()">
+        <span>Format SSRP Chat ✨</span>
+    </button>
+
+    <div class="output-container" id="outputContainerSSRP">
+        <label style="font-size: 12px; font-weight: 700; color: var(--sea-blue); display:block; margin-bottom:8px;">HASIL FORMAT CHAT SSRP (SIAP PAKAI):</label>
+        <div class="preview-box" id="outputSSRP"></div>
+        <div class="btn-group">
+            <button class="btn btn-copy" onclick="copyText('outputSSRP')">📋 Copy Rich Text</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab Controller System (Smooth SPA)
+    function switchTab(tabId) {
+        const containers = document.querySelectorAll('.container');
+        const buttons = document.querySelectorAll('.tab-btn');
+        
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Cari tombol nav yang cocok untuk diaktifkan class-nya
+        buttons.forEach(btn => {
+            if(btn.getAttribute('onclick').includes(tabId)) btn.classList.add('active');
+        });
+
+        containers.forEach(container => {
+            if(container.classList.contains('active')) {
+                gsap.to(container, { opacity: 0, y: 10, duration: 0.2, onComplete: () => {
+                    container.classList.remove('active');
+                    openTargetTab(tabId);
+                }});
+            }
+        });
+    }
+
+    function openTargetTab(tabId) {
+        const target = document.getElementById(`tab-${tabId}`);
+        target.classList.add('active');
+        gsap.fromTo(target, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
+    }
+
+    // Animasi Awal Aplikasi Dibuka
+    window.addEventListener('DOMContentLoaded', () => {
+        gsap.to("#tab-home", { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" });
+    });
+
+    // Toast Notification
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = type === 'success' ? '⚡' : (type === 'error' ? '⚠️' : '🛰️');
+        toast.innerHTML = `<div>${icon}</div> <div>${message}</div>`;
+        container.appendChild(toast);
+
+        gsap.to(toast, { translateX: '0%', duration: 0.4, ease: "power2.out" });
+        setTimeout(() => {
+            gsap.to(toast, { opacity: 0, x: 30, duration: 0.3, onComplete: () => toast.remove() });
+        }, 4000);
+    }
+
+    // ENGINE 1: FEATURE CHARACTER STORY GENERATOR
+    async function generateStoryWithAnim() {
+        const fullName = document.getElementById('charName').value.trim();
+        const place = document.getElementById('birthPlace').value.trim();
+        const dateInput = document.getElementById('birthDate').value;
+        const infoTambahan = document.getElementById('promptTambahan').value.trim();
+
+        if(!fullName || !place || !dateInput) {
+            showNotification("Isi semua kolom wajib!", "error");
+            return;
+        }
+
+        const dateObj = new Date(dateInput);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        const formatCSDate = `${day}/${month}/${year}`;
+
+        const btn = document.getElementById('btnGenCS');
+        const loadingArea = document.getElementById('loadingAreaCS');
+        const outputContainer = document.getElementById('outputContainerCS');
+
+        btn.disabled = true;
+        showNotification("Mengirim perintah ke AI...", "info");
+
+        if(outputContainer.style.display === 'block') {
+            gsap.to(outputContainer, { opacity: 0, y: 10, duration: 0.2, onComplete: () => {
+                outputContainer.style.display = 'none';
+                loadingArea.style.display = 'block';
+                gsap.fromTo(loadingArea, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+            }});
+        } else {
+            loadingArea.style.display = 'block';
+            gsap.fromTo(loadingArea, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+        }
+
+        const promptAI = `Kamu adalah penulis cerita profesional untuk forum GTA SAMP Roleplay JGRP. Buat cerita 3 paragraf, minimal 350 kata, awali 5 spasi tiap paragraf. Karakter bernama ${fullName.replace('_', ' ')} lahir di ${place} tanggal ${day}/${month}/${year}. Detail tambahan: ${infoTambahan || 'Tidak ada'}. JANGAN gunakan format JSON atau markdown codeblock, keluarkan teks cerita bersih saja.`;
+
+        try {
+            const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptAI)}?model=openai&system=${encodeURIComponent("Keluarkan hasil cerita mentah murni tanpa bungkusan objek JSON atau kode.")}`);
+            if (!response.ok) throw new Error("Server sibuk.");
+            
+            let rawData = await response.text();
+            let cleanedStory = "";
+
+            try {
+                const parsedJson = JSON.parse(rawData);
+                cleanedStory = parsedJson.content || parsedJson.choices[0].message.content || rawData;
+            } catch (e) {
+                cleanedStory = rawData;
+            }
+
+            cleanedStory = cleanedStory.replace(/^["'`]|["'`]$/g, '').trim();
+            const finalOutput = `Character: ${fullName}\nOrigin: ${place}\nStory Character Born: ${formatCSDate}\n\n--- Character Story ---\n\n${cleanedStory}`;
+
+            document.getElementById('outputCS').innerText = finalOutput;
+            
+            gsap.to(loadingArea, { opacity: 0, duration: 0.2, onComplete: () => {
+                loadingArea.style.display = 'none';
+                outputContainer.style.display = 'block';
+                gsap.fromTo(outputContainer, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3 });
+                outputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                showNotification("Story berhasil dimuat!", "success");
+            }});
+        } catch (error) {
+            showNotification("Error: " + error.message, "error");
+            loadingArea.style.display = 'none';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ENGINE 2: FEATURE SSRP GENERATOR
+    function generateSSRP() {
+        const inputRaw = document.getElementById('ssrpInput').value.trim();
+        const outputContainer = document.getElementById('outputContainerSSRP');
+        const outputBox = document.getElementById('outputSSRP');
+
+        if(!inputRaw) {
+            showNotification("Masukkan log dialog terlebih dahulu!", "err
