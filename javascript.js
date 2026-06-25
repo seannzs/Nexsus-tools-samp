@@ -186,7 +186,7 @@ async function generateStoryWithAnim() {
     gsap.fromTo(loadingArea, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
     startLoadingPhases();
 
-    const promptAI = `Kamu adalah AI pembuat Character Story profesional untuk forum GTA SAMP JGRP. Buatlah cerita panjang sebanyak 3 paragraf (minimal 350 kata total), ketik dengan rapi, dan berikan awalan 5 spasi/indentasi di setiap awal paragraf. Karakter ini bernama ${fullName.replace('_', ' ')} yang lahir di ${place} pada tanggal ${day}/${month}/${year}. Detail latar belakang tambahan: ${infoTambahan || 'tidak ada'}. Dilarang merespon dalam bentuk struktur objek JSON, keluarkan langsung teks ceritanya saja secara polos tanpa markdown tebal. rules 
+    const promptAI = `Kamu adalah AI pembuat Character Story profesional. Karakter ini bernama ${fullName.replace('_', ' ')} yang lahir di ${place} pada tanggal ${day}/${month}/${year}. Detail latar belakang tambahan: ${infoTambahan || 'tidak ada'}. Dilarang merespon dalam bentuk struktur objek JSON, keluarkan langsung teks ceritanya saja secara polos tanpa markdown tebal. rules 
 [•] Umur karakter setidaknya berusia 18 tahun secara IC
 [•] Diawal story wajib memiliki tanggal lahir karakter anda.
 [•] Menggunakan Bahasa Indonesia/Inggris yang baik dan benar sesuai dengan kaidah kepenulisan.
